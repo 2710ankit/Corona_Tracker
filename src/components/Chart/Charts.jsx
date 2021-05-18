@@ -2,40 +2,77 @@ import React,{useState,useEffect} from 'react';
 import { fetchDailydata } from '../../api';
 import {Line, Bar} from 'react-chartjs-2';
 import styles from './Charts.module.css'
-const Charts = () => {
+const Charts = ({data :{confirmed, recovered, deaths},country}) => {
 
     const [dailydata,setDailyData] = useState([]);
 
     useEffect(() => {
         
         const fetchApi = async ()=>{
-            const dailyData = await fetchDailydata();
+            setDailyData(await fetchDailydata());
         }
 
         fetchApi();
 
-    });
+    },[]);
 
     const lineChart=(
         
-        dailydata.length != 0
+        dailydata.length
         ?
-        <Line
+        (<Line
             data={{
-                labels : '',
-                datasets : [{},{}]
+                labels : dailydata.map(({date}) => date),
+                datasets : [{
+                    data : dailydata.map(({confirmed}) => confirmed),
+                    label : "Infected",
+                    borderColor: 'blue',
+                    fill: true
+                },{
+                    data : dailydata.map(({deaths}) => deaths),
+                    label : "Deaths",
+                    borderColor: 'red',
+                    backgroundColor:'rgba(255,0,0,0.5)',
+                    fill: true
+
+                }],
 
             }}
-        />
+        />)
         :
         null
         
     )
+
+    // console.log(confirmed.value, recovered.value, deaths.value)
+
+    const barChart = (
+        confirmed
+        ?
+        <Bar
+            data={{
+                labels:['Infected', 'Recovered', 'Deaths'],
+                datasets:[{
+                    label : "People",
+                    backgroundColor : ['rgba(144, 144, 189, 0.5)',
+                        'rgba(0, 255, 0, 0.5)',
+                        'rgba(255, 0, 0, 0.5)'],
+                    data : [confirmed.value, recovered.value, deaths.value]
+                }]
+            }}
+            options = {{
+                legend : {display:false},
+                title : {display: true, text:{country}}
+            }}
+        />
+        :
+        null
+    )
     
 
     return (
-        <div>
-            <h2>charts</h2>
+        <div className={styles.container}>
+            {country ? barChart : lineChart}
         </div>
     )
 }
